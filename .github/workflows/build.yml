@@ -1,0 +1,36 @@
+name: Build SmsPing
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/SmsPing.csproj
+
+      - name: Build (Release, net48)
+        run: dotnet build src/SmsPing.csproj -c Release --no-restore
+
+      - name: Liệt kê file exe đã build (kiểm tra)
+        shell: pwsh
+        run: Get-ChildItem -Recurse -Filter *.exe src/bin | Select-Object FullName
+
+      - name: Upload SmsPing.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmsPing
+          if-no-files-found: error
+          path: |
+            src/bin/Release/**/SmsPing.exe
+            src/bin/Release/**/SmsPing.exe.config
